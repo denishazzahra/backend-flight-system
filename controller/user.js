@@ -21,12 +21,24 @@ const postUser = async(req,res,next)=>{
 
 		const checkEmail = await User.findOne({
 			where:{
-				email: email
+				email: encryptText(email)
 			}
 		});
 
 		if(checkEmail){
 			const error = new Error("Email is already registered.");
+			error.statusCode = 400;
+			throw error;
+		}
+
+    const checkPhone = await User.findOne({
+			where:{
+				phone: encryptText(phone)
+			}
+		});
+
+		if(checkPhone){
+			const error = new Error("Phone is already registered.");
 			error.statusCode = 400;
 			throw error;
 		}
@@ -172,8 +184,8 @@ const editProfile=async (req,res,next)=>{
     const { email, fullName, phone } = req.body;
 
     //kalau user kosongin jangan diubah di db nya
-    if(email==null || fullName==null){
-      const error=new Error('Email, and full name can\'t be empty!')
+    if(email==null || phone==null || fullName==null){
+      const error=new Error('Full name, email, and phone number can\'t be empty!')
       error.statusCode=400
       throw error
     }

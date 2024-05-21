@@ -5,13 +5,15 @@
    DB_PASSWORD = <br>
    DB_NAME =<br>
    DB_HOST =<br>
+   PORT =<br>
+   API_BASE =<br>
    TOKEN_SECRET_KEY =<br>
    CLOUDINARY_API_SECRET =<br>
    CLOUDINARY_API_KEY =<br>
    CLOUDINARY_CLOUD_NAME =<br>
    ENCRYPTION_ALGORITHM =<br>
-   ENCRYPTION_KEY = <br>
-   ENCRYPTION_IV = <br>
+   ENCRYPTION_KEY = (32 bytes hex)<br>
+   ENCRYPTION_IV = (16 bytes hex)<br>
 3. Create a new database in mysql
 4. Import the database from ```database/db.sql```
 5. Open cmd, go to this folder and then type ```npm i```

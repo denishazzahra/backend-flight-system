@@ -5,6 +5,7 @@ const flightRouter = require('./routes/flight');
 const seatRouter = require('./routes/seat');
 const airportRouter = require('./routes/airport');
 const ticketRouter = require('./routes/ticket');
+const port = process.env.PORT;
 const app = express();
 
 app.use(function (req, res, next) {
@@ -30,7 +31,7 @@ app.get("/", (req,res,next)=>{
 })
 
 association().then(()=>{
-  app.listen(8080);
+  app.listen(port);
   console.log('connected to db')
 }).catch(e=>{
   console.log(e);
