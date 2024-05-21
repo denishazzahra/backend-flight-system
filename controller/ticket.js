@@ -7,6 +7,10 @@ const Ticket = require('../model/Ticket');
 const jwt = require('jsonwebtoken');
 const key = process.env.TOKEN_SECRET_KEY;
 const {sequelize} = require('../util/db_connect')
+const crypto = require('crypto');
+const algorithm = process.env.ENCRYPTION_ALGORITHM;
+const encryption_key = Buffer.from(process.env.ENCRYPTION_KEY, 'hex');
+const encryption_iv = Buffer.from(process.env.ENCRYPTION_IV, 'hex');
 
 const bookTicket = async(req,res,next)=>{
 	try {
@@ -74,18 +78,28 @@ const bookTicket = async(req,res,next)=>{
 
 		const newTicket = await Ticket.create({
 			id: nanoid(16),
-			fullName:fullName,
-			email:email,
-			phone:phone,
+			fullName:encryptText(fullName),
+			email:encryptText(email),
+			phone:encryptText(phone),
 			userId: decoded.userId,
 			flightId: flightId,
 			seatId: seatId
 		})
 
+		const decryptedTicket = {
+			id: newTicket.id,
+			fullName:decryptText(newTicket.fullName),
+			email:decryptText(newTicket.email),
+			phone:decryptText(newTicket.phone),
+			userId: newTicket.userId,
+			flightId: newTicket.flightId,
+			seatId: newTicket.seatId
+		}
+
 		res.status(201).json({
 			status: "Success",
 			message: "Successfully booked ticket!",
-			ticket: newTicket
+			ticket: decryptedTicket
 		})
 	} catch (error) {
 		res.status(error.statusCode || 500).json({
@@ -140,11 +154,21 @@ const getAllTickets = async(req,res,next)=>{
 				}
 			]
 		});
+		const decryptedTickets = tickets.map(ticket => {
+			return {
+				id: ticket.id,
+				fullName: decryptText(ticket.fullName),
+				email: decryptText(ticket.email),
+				phone: decryptText(ticket.phone),
+				flight: ticket.flight,
+				seat: ticket.seat
+			};
+		});
 
-		res.status(201).json({
+		res.status(200).json({
 			status: "Success",
-			message: "Successfully booked ticket!",
-			tickets: tickets
+			message: "Successfully fetch all tickets!",
+			tickets: decryptedTickets
 		})
 	} catch (error) {
 		res.status(error.statusCode || 500).json({
@@ -158,7 +182,7 @@ const getSpecificTicket = async(req,res,next)=>{
 	try {
 		const authorization = req.headers.authorization;
 		const {id} = req.params;
-		
+
 		let token;
 		if(authorization !== undefined && authorization.startsWith("Bearer ")){
       token = authorization.substring(7); 
@@ -206,11 +230,20 @@ const getSpecificTicket = async(req,res,next)=>{
 			error.statusCode = 403;
 			throw error;
 		}
+		const decryptedTicket = {
+			id: ticket.id,
+			fullName: decryptText(ticket.fullName),
+			email: decryptText(ticket.email),
+			phone: decryptText(ticket.phone),
+			flight: ticket.flight,
+			seat: ticket.seat
+		};
+		
 
-		res.status(201).json({
+		res.status(200).json({
 			status: "Success",
-			message: "Successfully booked ticket!",
-			ticket: ticket
+			message: "Successfully fetch ticket!",
+			ticket: decryptedTicket
 		})
 	} catch (error) {
 		res.status(error.statusCode || 500).json({
@@ -218,6 +251,20 @@ const getSpecificTicket = async(req,res,next)=>{
 			message: error.message
 		})
 	}
+}
+
+function encryptText(text){
+  const cipher = crypto.createCipheriv(algorithm, encryption_key, encryption_iv);
+  let encrypted = cipher.update(text, 'utf8', 'hex');
+  encrypted += cipher.final('hex');
+  return encrypted;
+}
+
+function decryptText(text){
+  const decipher = crypto.createDecipheriv(algorithm, encryption_key, encryption_iv);
+  let decrypted = decipher.update(text, 'hex', 'utf8');
+  decrypted += decipher.final('utf8');
+  return decrypted;
 }
 
 module.exports = {bookTicket, getAllTickets, getSpecificTicket}

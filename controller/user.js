@@ -7,6 +7,10 @@ const key = process.env.TOKEN_SECRET_KEY;
 const cloudinary = require('../util/cloudinary_config');
 const upload=require('../middleware/upload_file');
 const fs = require('fs');
+const crypto = require('crypto');
+const algorithm = process.env.ENCRYPTION_ALGORITHM;
+const encryption_key = Buffer.from(process.env.ENCRYPTION_KEY, 'hex');
+const encryption_iv = Buffer.from(process.env.ENCRYPTION_IV, 'hex');
 
 const postUser = async(req,res,next)=>{
   try {
@@ -33,9 +37,9 @@ const postUser = async(req,res,next)=>{
     //insert data ke tabel users
     await User.create({
       id: nanoid(16),
-      fullName: fullName,
-      email: email,
-      phone: phone,
+      fullName: encryptText(fullName),
+      email: encryptText(email),
+      phone: encryptText(phone),
       password : hashedPassword,
       role: role
     });
@@ -63,10 +67,10 @@ const loginHandler = async (req,res,next)=>{
 			where:{
         [Op.or]: [
           {
-            email: emailOrPhone
+            email: encryptText(emailOrPhone)
           },
           {
-            phone: emailOrPhone
+            phone: encryptText(emailOrPhone)
           }
         ]
 			}
@@ -132,19 +136,26 @@ const getUserByToken = async(req,res,next)=>{
     const userId=payload.userId
     const user = await User.findOne({
       where:{id: userId},
-      attributes: ['id','fullName','email','profilePicture','role'],
+      attributes: ['id','fullName','email','phone','profilePicture','role'],
     })
-
     if(user == undefined){
-        res.status(400).json({
-        status: "Error",
-        message: `User with id ${userId} doesn't exist!`
-        })
+      res.status(400).json({
+      status: "Error",
+      message: `User with id ${userId} doesn't exist!`
+      })
     }
+    const decryptedUser = {
+      id: user.id,
+      fullName: decryptText(user.fullName),
+      email: decryptText(user.email),
+      phone: decryptText(user.phone),
+      profilePicture: user.profilePicture,
+      role: user.role,
+    };
     res.status(200).json({
-        status:"Success",
-        message: "Succesfully fetch user data",
-        user: user
+      status:"Success",
+      message: "Succesfully fetch user data",
+      user: decryptedUser
     })
 
   }catch(error){
@@ -158,7 +169,7 @@ const getUserByToken = async(req,res,next)=>{
 const editProfile=async (req,res,next)=>{
   try {
     const authorization=req.headers.authorization
-    const { email, fullName } = req.body;
+    const { email, fullName, phone } = req.body;
 
     //kalau user kosongin jangan diubah di db nya
     if(email==null || fullName==null){
@@ -207,22 +218,33 @@ const editProfile=async (req,res,next)=>{
       )
     }
 
-    //cek email baru udah kepake atau belum
     const checkEmail = await User.findOne({
       where:{
-        email: email
+        email: encryptText(email)
       }
     })
-    if(checkUser && checkEmail.id!=currentUser.id){
+    if(checkEmail && checkEmail.id!=currentUser.id){
       const error=new Error('Email is already used!')
       error.statusCode=400
       throw error
     }    
 
+    const checkPhone = await User.findOne({
+      where:{
+        phone: encryptText(phone)
+      }
+    })
+    if(checkEmail && checkEmail.id!=currentUser.id){
+      const error=new Error('Email is already used!')
+      error.statusCode=400
+      throw error
+    }  
+
     //update akun
     currentUser.update({
-      fullName,
-      email
+      fullName: encryptText(fullName),
+      email: encryptText(email),
+      phone: encryptText(phone)
     })
 
     res.status(200).json({
@@ -242,7 +264,15 @@ const getAllUsers = async(req, res, next)=>{
     const users = await User.findAll({
       attributes: ['id','fullName','email','profilePicture','role'],
     });
-
+    const decryptedUsers = users.map(user => {
+      return {
+        id: user.id,
+        fullName: decryptText(user.fullName),
+        email: decryptText(user.email),
+        profilePicture: user.profilePicture,
+        role: user.role,
+      };
+    });
     res.status(200).json({
       status: "Success",
       message: "Successfully fetch all user data",
@@ -254,6 +284,20 @@ const getAllUsers = async(req, res, next)=>{
       message: error.message
     })
   }
+}
+
+function encryptText(text){
+  const cipher = crypto.createCipheriv(algorithm, encryption_key, encryption_iv);
+  let encrypted = cipher.update(text, 'utf8', 'hex');
+  encrypted += cipher.final('hex');
+  return encrypted;
+}
+
+function decryptText(text){
+  const decipher = crypto.createDecipheriv(algorithm, encryption_key, encryption_iv);
+  let decrypted = decipher.update(text, 'hex', 'utf8');
+  decrypted += decipher.final('utf8');
+  return decrypted;
 }
 
 module.exports = {
