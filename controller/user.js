@@ -246,7 +246,7 @@ const editProfile=async (req,res,next)=>{
         phone: encryptText(phone)
       }
     })
-    if(checkEmail && checkEmail.id!=currentUser.id){
+    if(checkPhone && checkEmail.id!=currentUser.id){
       const error=new Error('Email is already used!')
       error.statusCode=400
       throw error
@@ -267,33 +267,6 @@ const editProfile=async (req,res,next)=>{
     res.status(error.statusCode || 500).json({
       status: "Error",
       message: error
-    })
-  }
-}
-
-const getAllUsers = async(req, res, next)=>{
-  try {
-    const users = await User.findAll({
-      attributes: ['id','fullName','email','profilePicture','role'],
-    });
-    const decryptedUsers = users.map(user => {
-      return {
-        id: user.id,
-        fullName: decryptText(user.fullName),
-        email: decryptText(user.email),
-        profilePicture: user.profilePicture,
-        role: user.role,
-      };
-    });
-    res.status(200).json({
-      status: "Success",
-      message: "Successfully fetch all user data",
-      users: users
-    })
-  } catch (error) {
-    res.status(error.statusCode || 500).json({
-      status: "Error",
-      message: error.message
     })
   }
 }
