@@ -16,7 +16,7 @@ const bookTicket = async(req,res,next)=>{
 	try {
 		const { nanoid } = await import('nanoid');
 		const authorization = req.headers.authorization;
-		const {flightId, seatId, fullName, email, phone} = req.body;
+		const {flightId, seatId, fullName, email, phone, date} = req.body;
 		
 		let token;
 		if(authorization !== undefined && authorization.startsWith("Bearer ")){
@@ -45,7 +45,7 @@ const bookTicket = async(req,res,next)=>{
 					attributes: ['id','type','capacity','price'],
 					required: true,
 					where:{
-						id: seatId
+						id: seatId,
 					}
 				}
 			],
@@ -65,10 +65,13 @@ const bookTicket = async(req,res,next)=>{
 					attributes: ['id','type','capacity','price'],
 					required: true,
 					where:{
-						id: seatId
+						id: seatId,
 					}
 				}
 			],
+			where:{
+				date:date
+			}
 		});
 		if(flight.seats[0].capacity-countTicket==0){
 			const error = new Error(`Ticket is sold out!`);
@@ -81,6 +84,7 @@ const bookTicket = async(req,res,next)=>{
 			fullName:encryptText(fullName),
 			email:encryptText(email),
 			phone:encryptText(phone),
+			date: date,
 			userId: decoded.userId,
 			flightId: flightId,
 			seatId: seatId
@@ -91,6 +95,7 @@ const bookTicket = async(req,res,next)=>{
 			fullName:decryptText(newTicket.fullName),
 			email:decryptText(newTicket.email),
 			phone:decryptText(newTicket.phone),
+			date:newTicket.date,
 			userId: newTicket.userId,
 			flightId: newTicket.flightId,
 			seatId: newTicket.seatId
@@ -123,7 +128,7 @@ const getAllTickets = async(req,res,next)=>{
     }
 		const decoded = jwt.verify(token, key);
 		const tickets = await Ticket.findAll({
-			attributes: ['id','fullName','email','phone'],
+			attributes: ['id','fullName','email','phone','date'],
 			include:[
 				{
 					model:User,
@@ -160,6 +165,7 @@ const getAllTickets = async(req,res,next)=>{
 				fullName: decryptText(ticket.fullName),
 				email: decryptText(ticket.email),
 				phone: decryptText(ticket.phone),
+				date:ticket.date,
 				flight: ticket.flight,
 				seat: ticket.seat
 			};
@@ -193,7 +199,7 @@ const getSpecificTicket = async(req,res,next)=>{
     }
 		const decoded = jwt.verify(token, key);
 		const ticket = await Ticket.findOne({
-			attributes: ['id','fullName','email','phone','userId'],
+			attributes: ['id','fullName','email','phone','date','userId'],
 			include:[
 				{
 					model: Flight,
@@ -235,6 +241,7 @@ const getSpecificTicket = async(req,res,next)=>{
 			fullName: decryptText(ticket.fullName),
 			email: decryptText(ticket.email),
 			phone: decryptText(ticket.phone),
+			date:ticket.date,
 			flight: ticket.flight,
 			seat: ticket.seat
 		};
