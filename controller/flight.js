@@ -163,7 +163,7 @@ const getFlightsWithFilter = async(req,res,next)=>{
 											SELECT COUNT(*)
 											FROM tickets AS ticket
 											WHERE
-													ticket.seatId = Seats.id
+													ticket.seatId = seats.id
 													AND DATE(ticket.date) = '${date}'
 									)`),
 									'ticketCount'
