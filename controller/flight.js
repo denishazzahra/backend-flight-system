@@ -161,7 +161,7 @@ const getFlightsWithFilter = async(req,res,next)=>{
 								[
 									Sequelize.literal(`(
 											SELECT COUNT(*)
-											FROM Tickets AS ticket
+											FROM tickets AS ticket
 											WHERE
 													ticket.seatId = Seats.id
 													AND DATE(ticket.date) = '${date}'
