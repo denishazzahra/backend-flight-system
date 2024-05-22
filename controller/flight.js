@@ -2,7 +2,7 @@ require('dotenv').config();
 const Flight = require('../model/Flight');
 const Airport = require('../model/Airport');
 const Seat = require('../model/Seat');
-const {Op} = require('sequelize');
+const {Sequelize,Op} = require('sequelize');
 const jwt = require('jsonwebtoken');
 const key = process.env.TOKEN_SECRET_KEY;
 const {sequelize} = require('../util/db_connect')
@@ -44,7 +44,7 @@ const getAllFlights = async(req,res,next)=>{
 
 const getFlightsWithFilter = async(req,res,next)=>{
 	try {
-		const {origin, destination} = req.body;
+		const {origin, destination, date} = req.body;
 		let whereCondition = {};
 		if (origin && destination) {
 			whereCondition = {
@@ -111,29 +111,69 @@ const getFlightsWithFilter = async(req,res,next)=>{
 			};
 		}
 
+		// const filteredFlights = await Flight.findAll({
+		// 	attributes: ['id', 'airline', 'flightNumber', 'departure_time', 'arrival_time'],
+		// 	include: [
+		// 		{
+		// 			model: Airport,
+		// 			as: 'origin_airport',
+		// 			attributes: ['name', 'code', 'city', 'province', 'timezone'],
+		// 			where: whereCondition.origin_airport || {}
+		// 		},
+		// 		{
+		// 			model: Airport,
+		// 			as: 'destination_airport',
+		// 			attributes: ['name', 'code', 'city', 'province', 'timezone'],
+		// 			where: whereCondition.destination_airport || {}
+		// 		},
+		// 		{
+		// 			model: Seat,
+		// 			attributes: ['id', 'type', 'capacity', 'price'],
+		// 			required: true,
+		// 		}
+		// 	],
+		// 	where: whereCondition
+		// });
 		const filteredFlights = await Flight.findAll({
-			attributes: ['id', 'airline', 'flightNumber', 'departure_time', 'arrival_time'],
+			attributes: [
+					'id', 
+					'airline', 
+					'flightNumber', 
+					'departure_time', 
+					'arrival_time'		
+			],
 			include: [
-				{
-					model: Airport,
-					as: 'origin_airport',
-					attributes: ['name', 'code', 'city', 'province', 'timezone'],
-					where: whereCondition.origin_airport || {}
-				},
-				{
-					model: Airport,
-					as: 'destination_airport',
-					attributes: ['name', 'code', 'city', 'province', 'timezone'],
-					where: whereCondition.destination_airport || {}
-				},
-				{
-					model: Seat,
-					attributes: ['id', 'type', 'capacity', 'price'],
-					required: true,
-				}
+					{
+							model: Airport,
+							as: 'origin_airport',
+							attributes: ['name', 'code', 'city', 'province', 'timezone'],
+							where: whereCondition.origin_airport || {}
+					},
+					{
+							model: Airport,
+							as: 'destination_airport',
+							attributes: ['name', 'code', 'city', 'province', 'timezone'],
+							where: whereCondition.destination_airport || {}
+					},
+					{
+							model: Seat,
+							attributes: ['id', 'type', 'capacity', 'price',
+								[
+									Sequelize.literal(`(
+											SELECT COUNT(*)
+											FROM Tickets AS ticket
+											WHERE
+													ticket.seatId = Seats.id
+													AND DATE(ticket.date) = '${date}'
+									)`),
+									'ticketCount'
+								]
+							],
+							required: true,
+					}
 			],
 			where: whereCondition
-		});
+	});
 		if(!filteredFlights){
 			const error = new Error(`Flight doesn't exist!`);
 			error.statusCode = 400;

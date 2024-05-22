@@ -286,5 +286,5 @@ function decryptText(text){
 }
 
 module.exports = {
-  postUser, loginHandler, getUserByToken, editProfile, getAllUsers,
+  postUser, loginHandler, getUserByToken, editProfile,
 }

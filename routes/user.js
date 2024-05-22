@@ -3,7 +3,7 @@ const router = express.Router();
 const upload=require('../middleware/upload_file')
 
 const { 
-    postUser, loginHandler, getUserByToken, getAllUsers,
+    postUser, loginHandler, getUserByToken,
     editProfile,
   } = require('../controller/user');
   
@@ -19,7 +19,5 @@ router.get("/users", getUserByToken);
 // ganti profile picture
 router.put("/users/edit-account", upload.single('image'), editProfile)
 
-// ambil semua user
-router.get("/users/fetch-all", getAllUsers)
 
 module.exports = router;
