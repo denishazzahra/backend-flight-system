@@ -23,8 +23,16 @@ const options = {
 		{ name: 'Flight', description: 'Operations related to flights' },
 		{ name: 'Seat', description: 'Operations related to seats' },
 		{ name: 'Ticket', description: 'Operations related to tickets' },
+		{ name: 'Admin', description: 'Operations related to admin' },
 	],
-  apis: ['./routes/user.js','./routes/airport.js','./routes/flight.js','./routes/seat.js','./routes/ticket.js'], // Path to the API routes
+  apis: [
+		'./routes/user.js',
+		'./routes/airport.js',
+		'./routes/flight.js',
+		'./routes/seat.js',
+		'./routes/ticket.js',
+		'./routes/admin.js'
+	], // Path to the API routes
 };
 const swaggerSpec = swaggerJSDoc(options);
 module.exports = swaggerSpec;

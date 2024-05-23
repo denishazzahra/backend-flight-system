@@ -5,6 +5,7 @@ const flightRouter = require('./routes/flight');
 const seatRouter = require('./routes/seat');
 const airportRouter = require('./routes/airport');
 const ticketRouter = require('./routes/ticket');
+const adminRouter = require('./routes/admin');
 const swaggerUi = require('swagger-ui-express');
 const swaggerSpec = require('./swagger');
 const port = process.env.PORT;
@@ -26,6 +27,7 @@ app.use(flightRouter);
 app.use(seatRouter);
 app.use(airportRouter);
 app.use(ticketRouter);
+app.use(adminRouter);
 
 app.get("/", (req,res,next)=>{
   res.json({

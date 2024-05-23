@@ -32,7 +32,7 @@ const {
  *           example:
  *             fullName: John Doe
  *             email: john.doe@example.com
- *             phone: "+1234567890"
+ *             phone: "1234567890"
  *             password: "securepassword"
  *     responses:
  *       201:

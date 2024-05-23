@@ -16,7 +16,7 @@ const postUser = async(req,res,next)=>{
   try {
     const { nanoid } = await import('nanoid');
     const {
-      fullName, email, phone, password, role
+      fullName, email, phone, password
     } = req.body;
 
 		const checkEmail = await User.findOne({
@@ -53,7 +53,7 @@ const postUser = async(req,res,next)=>{
       email: encryptText(email),
       phone: encryptText(phone),
       password : hashedPassword,
-      role: role
+      role: "User"
     });
 
     //send response
