@@ -107,7 +107,6 @@ const loginHandler = async (req,res,next)=>{
 			role: currentUser.role
 			}, key,{
 			algorithm: "HS256",
-			expiresIn: "60d"
 		})
 
 		res.status(200).json({

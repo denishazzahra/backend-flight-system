@@ -18,7 +18,7 @@ const postNewAirport = async(req,res,next)=>{
       throw error;
     }
 		const decoded = jwt.verify(token, key);
-		if(decoded.id!='admin'){
+		if(decoded.role!='Admin'){
 			const error = new Error(`You are not allowed to do this request!`);
 			error.statusCode = 403;
 			throw error;
@@ -33,7 +33,7 @@ const postNewAirport = async(req,res,next)=>{
 				code: code
 			}
 		})
-		if(!checkCode){
+		if(checkCode){
 			const error = new Error(`Airport is already registered!`);
 			error.statusCode = 400;
 			throw error;
@@ -64,6 +64,88 @@ const postNewAirport = async(req,res,next)=>{
 	}
 }
 
+const deleteAirport = async(req,res,next)=>{
+	try {
+		const authorization = req.headers.authorization;
+		const {id} = req.params;
+		let token;
+		if(authorization !== undefined && authorization.startsWith("Bearer ")){
+			token = authorization.substring(7); 
+		}else{
+			const error = new Error("You need to login to access this page.");
+			error.statusCode = 403;
+			throw error;
+		}
+		const decoded = jwt.verify(token, key);
+		if(decoded.role!='Admin'){
+			const error = new Error(`You are not allowed to do this request!`);
+			error.statusCode = 403;
+			throw error;
+		}
+		const airport = await Airport.findByPk(id);
+		if(!airport){
+			const error = new Error(`Airport with id ${id} doesn't exist!`);
+			error.statusCode = 404;
+			throw error;
+		}
+		airport.destroy();
+		res.status(200).json({
+			status: "Success",
+			message: "Airport deleted successfully.",
+		})
+	} catch (error) {
+		res.status(error.statusCode || 500).json({
+			status: "Error",
+			message: error.message
+		})
+	}
+}
+
+const updateAirport = async(req,res,next)=>{
+	try {
+		const authorization = req.headers.authorization;
+		const {id} = req.params;
+		const {name, city, province, code, timezone} = req.body;
+		let token;
+		if(authorization !== undefined && authorization.startsWith("Bearer ")){
+			token = authorization.substring(7); 
+		}else{
+			const error = new Error("You need to login to access this page.");
+			error.statusCode = 403;
+			throw error;
+		}
+		const decoded = jwt.verify(token, key);
+		if(decoded.role!='Admin'){
+			const error = new Error(`You are not allowed to do this request!`);
+			error.statusCode = 403;
+			throw error;
+		}
+		const airport = await Airport.findByPk(id);
+		if(!airport){
+			const error = new Error(`Airport with id ${id} doesn't exist!`);
+			error.statusCode = 404;
+			throw error;
+		}
+		airport.update({
+			name,
+			city,
+			province,
+			code,
+			timezone
+		});
+		res.status(200).json({
+			status: "Success",
+			message: "Airport updated successfully.",
+			airport: airport
+		})
+	} catch (error) {
+		res.status(error.statusCode || 500).json({
+			status: "Error",
+			message: error.message
+		})
+	}
+}
+
 const getAllAirports = async(req,res,next)=>{
 	try {
 		const airports = await Airport.findAll({});
@@ -80,4 +162,4 @@ const getAllAirports = async(req,res,next)=>{
 	}
 }
 
-module.exports = {postNewAirport, getAllAirports};
+module.exports = {postNewAirport, getAllAirports, deleteAirport, updateAirport};

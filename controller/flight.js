@@ -1,6 +1,5 @@
 require('dotenv').config();
 const Flight = require('../model/Flight');
-const Airport = require('../model/Airport');
 const Seat = require('../model/Seat');
 const {Sequelize,Op} = require('sequelize');
 const jwt = require('jsonwebtoken');
@@ -13,13 +12,13 @@ const getAllFlights = async(req,res,next)=>{
 			attributes: ['id','airline','flightNumber','departure_time','arrival_time'],
 			include: [
 				{
-					model: Airport,
-					as: 'origin_airport',
+					model: Flight,
+					as: 'origin_flight',
 					attributes: ['name','code','city','province','timezone'],
 				},
 				{
-					model: Airport,
-					as: 'destination_airport',
+					model: Flight,
+					as: 'destination_flight',
 					attributes: ['name','code','city','province','timezone'],
 				},
 				{
@@ -42,6 +41,89 @@ const getAllFlights = async(req,res,next)=>{
 	}
 }
 
+const deleteFlight = async(req,res,next)=>{
+	try {
+		const authorization = req.headers.authorization;
+		const {id} = req.params;
+		let token;
+		if(authorization !== undefined && authorization.startsWith("Bearer ")){
+			token = authorization.substring(7); 
+		}else{
+			const error = new Error("You need to login to access this page.");
+			error.statusCode = 403;
+			throw error;
+		}
+		const decoded = jwt.verify(token, key);
+		if(decoded.role!='Admin'){
+			const error = new Error(`You are not allowed to do this request!`);
+			error.statusCode = 403;
+			throw error;
+		}
+		const flight = await Flight.findByPk(id);
+		if(!flight){
+			const error = new Error(`Flight with id ${id} doesn't exist!`);
+			error.statusCode = 404;
+			throw error;
+		}
+		flight.destroy();
+		res.status(200).json({
+			status: "Success",
+			message: "Flight deleted successfully.",
+		})
+	} catch (error) {
+		res.status(error.statusCode || 500).json({
+			status: "Error",
+			message: error.message
+		})
+	}
+}
+
+const updateFlight = async(req,res,next)=>{
+	try {
+		const authorization = req.headers.authorization;
+		const {id} = req.params;
+		const {airline, flightNumber, departure_time, arrival_time, originId, destinationId} = req.body;
+		let token;
+		if(authorization !== undefined && authorization.startsWith("Bearer ")){
+			token = authorization.substring(7); 
+		}else{
+			const error = new Error("You need to login to access this page.");
+			error.statusCode = 403;
+			throw error;
+		}
+		const decoded = jwt.verify(token, key);
+		if(decoded.role!='Admin'){
+			const error = new Error(`You are not allowed to do this request!`);
+			error.statusCode = 403;
+			throw error;
+		}
+		const flight = await Flight.findByPk(id);
+		if(!flight){
+			const error = new Error(`Flight with id ${id} doesn't exist!`);
+			error.statusCode = 404;
+			throw error;
+		}
+		flight.update({
+			airline,
+			flightNumber,
+			departure_time,
+			arrival_time,
+			originId,
+			destinationId
+		});
+		res.status(200).json({
+			status: "Success",
+			message: "Flight updated successfully.",
+			flight: flight
+		})
+	} catch (error) {
+		res.status(error.statusCode || 500).json({
+			status: "Error",
+			message: error.message
+		})
+	}
+}
+
 const getFlightsWithFilter = async(req,res,next)=>{
 	try {
 		const {origin, destination, date} = req.body;
@@ -53,13 +135,13 @@ const getFlightsWithFilter = async(req,res,next)=>{
 						{
 							[Op.or]: [
 								{
-										'$origin_airport.name$': { [Op.like]: `%${origin}%` }
+										'$origin_flight.name$': { [Op.like]: `%${origin}%` }
 								},
 								{
-										'$origin_airport.code$': { [Op.like]: `%${origin}%` }
+										'$origin_flight.code$': { [Op.like]: `%${origin}%` }
 								},
 								{
-										'$origin_airport.city$': { [Op.like]: `%${origin}%` }
+										'$origin_flight.city$': { [Op.like]: `%${origin}%` }
 								}
 							]
 						}
@@ -68,13 +150,13 @@ const getFlightsWithFilter = async(req,res,next)=>{
 						{
 							[Op.or]: [
 								{
-										'$destination_airport.name$': { [Op.like]: `%${destination}%` }
+										'$destination_flight.name$': { [Op.like]: `%${destination}%` }
 								},
 								{
-										'$destination_airport.code$': { [Op.like]: `%${destination}%` }
+										'$destination_flight.code$': { [Op.like]: `%${destination}%` }
 								},
 								{
-										'$destination_airport.city$': { [Op.like]: `%${destination}%` }
+										'$destination_flight.city$': { [Op.like]: `%${destination}%` }
 								}
 							]
 						}
@@ -85,13 +167,13 @@ const getFlightsWithFilter = async(req,res,next)=>{
 			whereCondition = {
 				[Op.or]: [
 					{
-						'$origin_airport.name$': { [Op.like]: `%${origin}%` }
+						'$origin_flight.name$': { [Op.like]: `%${origin}%` }
 					},
 					{
-						'$origin_airport.code$': { [Op.like]: `%${origin}%` }
+						'$origin_flight.code$': { [Op.like]: `%${origin}%` }
 					},
 					{
-						'$origin_airport.city$': { [Op.like]: `%${origin}%` }
+						'$origin_flight.city$': { [Op.like]: `%${origin}%` }
 					}
 				]
 			};
@@ -99,41 +181,18 @@ const getFlightsWithFilter = async(req,res,next)=>{
 			whereCondition = {
 				[Op.or]: [
 					{
-						'$destination_airport.name$': { [Op.like]: `%${destination}%` }
+						'$destination_flight.name$': { [Op.like]: `%${destination}%` }
 					},
 					{
-						'$destination_airport.code$': { [Op.like]: `%${destination}%` }
+						'$destination_flight.code$': { [Op.like]: `%${destination}%` }
 					},
 					{
-						'$destination_airport.city$': { [Op.like]: `%${destination}%` }
+						'$destination_flight.city$': { [Op.like]: `%${destination}%` }
 					}
 				]
 			};
 		}
 
-		// const filteredFlights = await Flight.findAll({
-		// 	attributes: ['id', 'airline', 'flightNumber', 'departure_time', 'arrival_time'],
-		// 	include: [
-		// 		{
-		// 			model: Airport,
-		// 			as: 'origin_airport',
-		// 			attributes: ['name', 'code', 'city', 'province', 'timezone'],
-		// 			where: whereCondition.origin_airport || {}
-		// 		},
-		// 		{
-		// 			model: Airport,
-		// 			as: 'destination_airport',
-		// 			attributes: ['name', 'code', 'city', 'province', 'timezone'],
-		// 			where: whereCondition.destination_airport || {}
-		// 		},
-		// 		{
-		// 			model: Seat,
-		// 			attributes: ['id', 'type', 'capacity', 'price'],
-		// 			required: true,
-		// 		}
-		// 	],
-		// 	where: whereCondition
-		// });
 		const filteredFlights = await Flight.findAll({
 			attributes: [
 					'id', 
@@ -144,16 +203,16 @@ const getFlightsWithFilter = async(req,res,next)=>{
 			],
 			include: [
 					{
-							model: Airport,
-							as: 'origin_airport',
+							model: Flight,
+							as: 'origin_flight',
 							attributes: ['name', 'code', 'city', 'province', 'timezone'],
-							where: whereCondition.origin_airport || {}
+							where: whereCondition.origin_flight || {}
 					},
 					{
-							model: Airport,
-							as: 'destination_airport',
+							model: Flight,
+							as: 'destination_flight',
 							attributes: ['name', 'code', 'city', 'province', 'timezone'],
-							where: whereCondition.destination_airport || {}
+							where: whereCondition.destination_flight || {}
 					},
 					{
 							model: Seat,
@@ -199,13 +258,13 @@ const getSpecificFlight = async(req,res,next)=>{
 			attributes: ['id','airline','flightNumber','departure_time','arrival_time'],
 			include: [
 				{
-					model: Airport,
-					as: 'origin_airport',
+					model: Flight,
+					as: 'origin_flight',
 					attributes: ['name','code','city','province','timezone'],
 				},
 				{
-					model: Airport,
-					as: 'destination_airport',
+					model: Flight,
+					as: 'destination_flight',
 					attributes: ['name','code','city','province','timezone'],
 				},
 				{
@@ -250,33 +309,33 @@ const postNewFlight = async(req,res,next)=>{
       throw error;
     }
 		const decoded = jwt.verify(token, key);
-		if(decoded.id!='admin'){
+		if(decoded.role!='Admin'){
 			const error = new Error(`You are not allowed to do this request!`);
 			error.statusCode = 403;
 			throw error;
 		}
 		if(originId==destinationId){
-			const error = new Error(`Origin and destination should not be the same airport!`);
+			const error = new Error(`Origin and destination should not be the same flight!`);
 			error.statusCode = 400;
 			throw error;
 		}
-		const checkOrigin = await Airport.findOne({
+		const checkOrigin = await Flight.findOne({
 			where:{
 				id: originId
 			}
 		})
 		if(!checkOrigin){
-			const error = new Error(`Origin airport with ID ${originId} doesn't exist!`);
+			const error = new Error(`Origin flight with ID ${originId} doesn't exist!`);
 			error.statusCode = 400;
 			throw error;
 		}
-		const checkDestination = await Airport.findOne({
+		const checkDestination = await Flight.findOne({
 			where:{
 				id: destinationId
 			}
 		})
 		if(!checkDestination){
-			const error = new Error(`Destination airport with ID ${originId} doesn't exist!`);
+			const error = new Error(`Destination flight with ID ${originId} doesn't exist!`);
 			error.statusCode = 400;
 			throw error;
 		}
@@ -301,4 +360,4 @@ const postNewFlight = async(req,res,next)=>{
 	}
 }
 
-module.exports = {getAllFlights, getFlightsWithFilter, getSpecificFlight, postNewFlight};
+module.exports = {getAllFlights, getFlightsWithFilter, getSpecificFlight, postNewFlight, updateFlight, deleteFlight};

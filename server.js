@@ -5,6 +5,8 @@ const flightRouter = require('./routes/flight');
 const seatRouter = require('./routes/seat');
 const airportRouter = require('./routes/airport');
 const ticketRouter = require('./routes/ticket');
+const swaggerUi = require('swagger-ui-express');
+const swaggerSpec = require('./swagger');
 const port = process.env.PORT;
 const app = express();
 
@@ -18,6 +20,7 @@ app.use(function (req, res, next) {
 app.use(express.json());
 app.use(express.urlencoded({ extended: false }));
 
+app.use('/docs', swaggerUi.serve, swaggerUi.setup(swaggerSpec));
 app.use(userRouter);
 app.use(flightRouter);
 app.use(seatRouter);
