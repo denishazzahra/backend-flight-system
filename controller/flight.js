@@ -1,5 +1,6 @@
 require('dotenv').config();
 const Flight = require('../model/Flight');
+const Airport = require('../model/Airport');
 const Seat = require('../model/Seat');
 const {Sequelize,Op} = require('sequelize');
 const jwt = require('jsonwebtoken');
@@ -135,13 +136,13 @@ const getFlightsWithFilter = async(req,res,next)=>{
 						{
 							[Op.or]: [
 								{
-										'$origin_flight.name$': { [Op.like]: `%${origin}%` }
+										'$origin_airport.name$': { [Op.like]: `%${origin}%` }
 								},
 								{
-										'$origin_flight.code$': { [Op.like]: `%${origin}%` }
+										'$origin_airport.code$': { [Op.like]: `%${origin}%` }
 								},
 								{
-										'$origin_flight.city$': { [Op.like]: `%${origin}%` }
+										'$origin_airport.city$': { [Op.like]: `%${origin}%` }
 								}
 							]
 						}
@@ -150,13 +151,13 @@ const getFlightsWithFilter = async(req,res,next)=>{
 						{
 							[Op.or]: [
 								{
-										'$destination_flight.name$': { [Op.like]: `%${destination}%` }
+										'$destination_airport.name$': { [Op.like]: `%${destination}%` }
 								},
 								{
-										'$destination_flight.code$': { [Op.like]: `%${destination}%` }
+										'$destination_airport.code$': { [Op.like]: `%${destination}%` }
 								},
 								{
-										'$destination_flight.city$': { [Op.like]: `%${destination}%` }
+										'$destination_airport.city$': { [Op.like]: `%${destination}%` }
 								}
 							]
 						}
@@ -167,13 +168,13 @@ const getFlightsWithFilter = async(req,res,next)=>{
 			whereCondition = {
 				[Op.or]: [
 					{
-						'$origin_flight.name$': { [Op.like]: `%${origin}%` }
+						'$origin_airport.name$': { [Op.like]: `%${origin}%` }
 					},
 					{
-						'$origin_flight.code$': { [Op.like]: `%${origin}%` }
+						'$origin_airport.code$': { [Op.like]: `%${origin}%` }
 					},
 					{
-						'$origin_flight.city$': { [Op.like]: `%${origin}%` }
+						'$origin_airport.city$': { [Op.like]: `%${origin}%` }
 					}
 				]
 			};
@@ -181,13 +182,13 @@ const getFlightsWithFilter = async(req,res,next)=>{
 			whereCondition = {
 				[Op.or]: [
 					{
-						'$destination_flight.name$': { [Op.like]: `%${destination}%` }
+						'$destination_airport.name$': { [Op.like]: `%${destination}%` }
 					},
 					{
-						'$destination_flight.code$': { [Op.like]: `%${destination}%` }
+						'$destination_airport.code$': { [Op.like]: `%${destination}%` }
 					},
 					{
-						'$destination_flight.city$': { [Op.like]: `%${destination}%` }
+						'$destination_airport.city$': { [Op.like]: `%${destination}%` }
 					}
 				]
 			};
@@ -203,16 +204,16 @@ const getFlightsWithFilter = async(req,res,next)=>{
 			],
 			include: [
 					{
-							model: Flight,
-							as: 'origin_flight',
+							model: Airport,
+							as: 'origin_airport',
 							attributes: ['name', 'code', 'city', 'province', 'timezone'],
-							where: whereCondition.origin_flight || {}
+							where: whereCondition.origin_airport || {}
 					},
 					{
-							model: Flight,
-							as: 'destination_flight',
+							model: Airport,
+							as: 'destination_airport',
 							attributes: ['name', 'code', 'city', 'province', 'timezone'],
-							where: whereCondition.destination_flight || {}
+							where: whereCondition.destination_airport || {}
 					},
 					{
 							model: Seat,
