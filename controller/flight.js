@@ -13,13 +13,13 @@ const getAllFlights = async(req,res,next)=>{
 			attributes: ['id','airline','flightNumber','departure_time','arrival_time'],
 			include: [
 				{
-					model: Flight,
-					as: 'origin_flight',
+					model: Airport,
+					as: 'origin_airport',
 					attributes: ['name','code','city','province','timezone'],
 				},
 				{
-					model: Flight,
-					as: 'destination_flight',
+					model: Airport,
+					as: 'destination_airport',
 					attributes: ['name','code','city','province','timezone'],
 				},
 				{
@@ -259,13 +259,13 @@ const getSpecificFlight = async(req,res,next)=>{
 			attributes: ['id','airline','flightNumber','departure_time','arrival_time'],
 			include: [
 				{
-					model: Flight,
-					as: 'origin_flight',
+					model: Airport,
+					as: 'origin_airport',
 					attributes: ['name','code','city','province','timezone'],
 				},
 				{
-					model: Flight,
-					as: 'destination_flight',
+					model: Airport,
+					as: 'destination_airport',
 					attributes: ['name','code','city','province','timezone'],
 				},
 				{
