@@ -3,7 +3,7 @@
 -- https://www.phpmyadmin.net/
 --
 -- Host: 127.0.0.1
--- Generation Time: May 21, 2024 at 05:38 AM
+-- Generation Time: May 24, 2024 at 11:00 AM
 -- Server version: 10.4.28-MariaDB
 -- PHP Version: 8.2.4
 
@@ -295,6 +295,9 @@ CREATE TABLE `tickets` (
   `fullName` varchar(255) NOT NULL,
   `email` varchar(255) NOT NULL,
   `phone` varchar(255) NOT NULL,
+  `date` date NOT NULL,
+  `soldAtPrice` double NOT NULL,
+  `currency` varchar(255) NOT NULL,
   `userId` varchar(255) DEFAULT NULL,
   `flightId` int(11) DEFAULT NULL,
   `seatId` int(11) DEFAULT NULL
@@ -364,19 +367,19 @@ ALTER TABLE `users`
 -- AUTO_INCREMENT for table `airports`
 --
 ALTER TABLE `airports`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=25;
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=26;
 
 --
 -- AUTO_INCREMENT for table `flights`
 --
 ALTER TABLE `flights`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=86;
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=88;
 
 --
 -- AUTO_INCREMENT for table `seats`
 --
 ALTER TABLE `seats`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=106;
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=108;
 
 --
 -- Constraints for dumped tables

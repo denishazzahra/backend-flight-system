@@ -38,10 +38,12 @@ router.get("/tickets", getAllTickets)
  *           example:
  *             flightId: 0
  *             seatId: 0
- *             fullName: 12:00:00
- *             email: 13:00:00
- *             phone: 0
+ *             fullName: string
+ *             email: string
+ *             phone: string
  *             date: 2024-05-17
+ *             soldAtPrice: 0.0
+ *             currency: IDR
  *     responses:
  *       201:
  *         description: Successful response with the ticket that was just booked.

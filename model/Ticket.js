@@ -23,7 +23,14 @@ const Ticket = sequelize.define('tickets',{
     type: Sequelize.DATEONLY,
     allowNull: false
   },
-
+  soldAtPrice:{
+    type: Sequelize.DOUBLE,
+    allowNull: false
+  },
+  currency:{
+    type: Sequelize.STRING,
+    allowNull: false
+  },
 },{
   timestamps: false
 })

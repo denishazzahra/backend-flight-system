@@ -16,7 +16,7 @@ const bookTicket = async(req,res,next)=>{
 	try {
 		const { nanoid } = await import('nanoid');
 		const authorization = req.headers.authorization;
-		const {flightId, seatId, fullName, email, phone, date} = req.body;
+		const {flightId, seatId, fullName, email, phone, date, soldAtPrice, currency} = req.body;
 		
 		let token;
 		if(authorization !== undefined && authorization.startsWith("Bearer ")){
@@ -62,7 +62,7 @@ const bookTicket = async(req,res,next)=>{
 			include:[
 				{
 					model: Seat,
-					attributes: ['id','type','capacity','price'],
+					attributes: ['id','type','capacity','price',],
 					required: true,
 					where:{
 						id: seatId,
@@ -85,6 +85,8 @@ const bookTicket = async(req,res,next)=>{
 			email:encryptText(email),
 			phone:encryptText(phone),
 			date: date,
+			soldAtPrice:soldAtPrice,
+			currency:currency,
 			userId: decoded.userId,
 			flightId: flightId,
 			seatId: seatId
@@ -96,6 +98,8 @@ const bookTicket = async(req,res,next)=>{
 			email:decryptText(newTicket.email),
 			phone:decryptText(newTicket.phone),
 			date:newTicket.date,
+			soldAtPrice: newTicket.soldAtPrice,
+			currency:newTicket.currency,
 			userId: newTicket.userId,
 			flightId: newTicket.flightId,
 			seatId: newTicket.seatId
@@ -128,7 +132,7 @@ const getAllTickets = async(req,res,next)=>{
     }
 		const decoded = jwt.verify(token, key);
 		const tickets = await Ticket.findAll({
-			attributes: ['id','fullName','email','phone','date'],
+			attributes: ['id','fullName','email','phone','date','soldAtPrice','currency'],
 			include:[
 				{
 					model:User,
@@ -155,7 +159,7 @@ const getAllTickets = async(req,res,next)=>{
 				},
 				{
 					model:Seat,
-					attributes: ['type','price']
+					attributes: ['type']
 				}
 			]
 		});
@@ -166,6 +170,8 @@ const getAllTickets = async(req,res,next)=>{
 				email: decryptText(ticket.email),
 				phone: decryptText(ticket.phone),
 				date:ticket.date,
+				soldAtPrice:ticket.soldAtPrice,
+				currency:ticket.currency,
 				flight: ticket.flight,
 				seat: ticket.seat
 			};
@@ -199,7 +205,7 @@ const getSpecificTicket = async(req,res,next)=>{
     }
 		const decoded = jwt.verify(token, key);
 		const ticket = await Ticket.findOne({
-			attributes: ['id','fullName','email','phone','date','userId'],
+			attributes: ['id','fullName','email','phone','date','soldAtPrice','currency','userId'],
 			include:[
 				{
 					model: Flight,
@@ -219,7 +225,7 @@ const getSpecificTicket = async(req,res,next)=>{
 				},
 				{
 					model:Seat,
-					attributes: ['type','price']
+					attributes: ['type']
 				}
 			],
 			where:{
@@ -231,6 +237,8 @@ const getSpecificTicket = async(req,res,next)=>{
 			error.statusCode = 400;
 			throw error;
 		}
+		console.log(ticket.userId);
+		console.log(decoded.userId);
 		if(ticket.userId!=decoded.userId){
 			const error = new Error(`You can't access this ticket!`);
 			error.statusCode = 403;
@@ -242,6 +250,8 @@ const getSpecificTicket = async(req,res,next)=>{
 			email: decryptText(ticket.email),
 			phone: decryptText(ticket.phone),
 			date:ticket.date,
+			soldAtPrice:ticket.soldAtPrice,
+			currency:ticket.currency,
 			flight: ticket.flight,
 			seat: ticket.seat
 		};
