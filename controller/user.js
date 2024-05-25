@@ -177,98 +177,91 @@ const getUserByToken = async(req,res,next)=>{
   }
 }
 
-const editProfile=async (req,res,next)=>{
+const editProfile = async (req, res, next) => {
   try {
-    const authorization=req.headers.authorization
+    const { authorization } = req.headers;
     const { email, fullName, phone } = req.body;
 
-    //kalau user kosongin jangan diubah di db nya
-    if(email==null || phone==null || fullName==null){
-      const error=new Error('Full name, email, and phone number can\'t be empty!')
-      error.statusCode=400
-      throw error
+    // Check if email, phone, or fullName is null or undefined
+    if (!email || !phone || !fullName) {
+      const error = new Error('Full name, email, and phone number can\'t be empty!');
+      error.statusCode = 400;
+      throw error;
     }
 
-    let token
-    if(authorization!==null && authorization.startsWith("Bearer ")){
-      token=authorization.substring(7)
-    }else{
-      const error=new Error("You need to login")
-      error.statusCode=403
-      throw error
+    let token;
+    if (authorization && authorization.startsWith("Bearer ")) {
+      token = authorization.substring(7);
+    } else {
+      const error = new Error("You need to login");
+      error.statusCode = 403;
+      throw error;
     }
-    const decoded=jwt.verify(token,key)
-    const currentUser=await User.findOne({
-      where:{
-        id:decoded.userId
+
+    const decoded = jwt.verify(token, key);
+    const currentUser = await User.findOne({
+      where: {
+        id: decoded.userId
       },
-      attributes:['id','fullName','email','profilePicture']
-    })
-    if(!currentUser){
-      const error=new Error(`User with ID ${decoded.userId} doesn't exist!`)
-      error.statusCode=400
-      throw error
-    }
-    let imageUrl
+      attributes: ['id', 'fullName', 'email', 'phone', 'profilePicture']
+    });
 
-    //kalau ada gambar diupload dia update profpic, kalo gaada skip
-    if(req.file){
-      const file=req.file
-      const uploadOption={
-        folder:'FlightSystem/ProfilePic/',
-        public_id:`user_${currentUser.id}`,
-        overwrite:true
-      }
-      const uploadFile=await cloudinary.uploader.upload(file.path,uploadOption)
-      imageUrl=uploadFile.secure_url
-      fs.unlinkSync(file.path)
-      currentUser.update(
-        {
-          profilePicture: imageUrl
-        }
-      )
+    if (!currentUser) {
+      const error = new Error(`User with ID ${decoded.userId} doesn't exist!`);
+      error.statusCode = 400;
+      throw error;
     }
 
     const checkEmail = await User.findOne({
-      where:{
+      where: {
         email: encryptText(email)
       }
-    })
-    if(checkEmail && checkEmail.id!=currentUser.id){
-      const error=new Error('Email is already used!')
-      error.statusCode=400
-      throw error
-    }    
+    });
+
+    if (checkEmail && checkEmail.id != currentUser.id) {
+      const error = new Error('Email is already used!');
+      error.statusCode = 400;
+      throw error;
+    }
 
     const checkPhone = await User.findOne({
-      where:{
+      where: {
         phone: encryptText(phone)
       }
-    })
-    if(checkPhone && checkEmail.id!=currentUser.id){
-      const error=new Error('Email is already used!')
-      error.statusCode=400
-      throw error
-    }  
+    });
 
-    //update akun
-    currentUser.update({
+    if (checkPhone && checkPhone.id != currentUser.id) {
+      const error = new Error('Phone is already used!');
+      error.statusCode = 400;
+      throw error;
+    }
+
+    // Update account
+    await currentUser.update({
       fullName: encryptText(fullName),
       email: encryptText(email),
       phone: encryptText(phone)
-    })
+    });
+
+    const decryptedUser = {
+      fullName: decryptText(currentUser.fullName),
+      email: decryptText(currentUser.email),
+      phone: decryptText(currentUser.phone),
+      profilePicture: currentUser.profilePicture
+    };
 
     res.status(200).json({
-      status:"Success",
-      updatedUser:currentUser
-    })
+      status: "Success",
+      updatedUser: decryptedUser
+    });
   } catch (error) {
     res.status(error.statusCode || 500).json({
       status: "Error",
-      message: error
-    })
+      message: error.message || error
+    });
   }
-}
+};
+
 
 function encryptText(text){
   const cipher = crypto.createCipheriv(algorithm, encryption_key, encryption_iv);

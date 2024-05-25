@@ -97,24 +97,25 @@ router.get("/users", getUserByToken);
  *     requestBody:
  *       required: true
  *       content:
- *         multipart/form-data:
+ *         application/json:
  *           schema:
  *             type: object
  *             properties:
- *               email:
- *                 type: string
  *               fullName:
+ *                 type: string
+ *               email:
  *                 type: string
  *               phone:
  *                 type: string
- *               image:
- *                 type: string
- *                 format: binary
+ *           example:
+ *             fullName: John Doe
+ *             email: john.doe@example.com
+ *             phone: "1234567890"
  *     responses:
  *       200:
  *         description: Successful response with user info that was just updated.
  */
 
-router.put("/users/edit-account", upload.single('image'), editProfile);
+router.put("/users/edit-account", editProfile);
 
 module.exports = router;
