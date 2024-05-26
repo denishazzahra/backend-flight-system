@@ -131,6 +131,7 @@ const getFlightsWithFilter = async (req, res, next) => {
     const { origin, destination, date } = req.body;
     const now = DateTime.now().setZone('Asia/Bangkok');
     const currentTime = now.toFormat('HH:mm:ss');
+		const currentDate = now.toFormat('yyyy-MM-dd');
 
     let whereCondition = {};
 
@@ -212,7 +213,7 @@ const getFlightsWithFilter = async (req, res, next) => {
       ],
       where: {
         ...whereCondition,
-        departure_time: { [Op.gt]: currentTime }
+        ...(DateTime.fromISO(date) <= now ? { departure_time: { [Op.gt]: currentTime } } : {})
       },
       order: [['departure_time', 'ASC']]
     });
