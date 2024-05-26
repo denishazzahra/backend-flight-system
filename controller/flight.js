@@ -6,6 +6,7 @@ const {Sequelize,Op} = require('sequelize');
 const jwt = require('jsonwebtoken');
 const key = process.env.TOKEN_SECRET_KEY;
 const {sequelize} = require('../util/db_connect')
+const { DateTime } = require('luxon');
 
 const getAllFlights = async(req,res,next)=>{
 	try {
@@ -128,8 +129,8 @@ const updateFlight = async(req,res,next)=>{
 const getFlightsWithFilter = async (req, res, next) => {
   try {
     const { origin, destination, date } = req.body;
-    const now = new Date();
-    const currentTime = now.toTimeString().split(' ')[0];
+    const now = DateTime.now().setZone('Asia/Bangkok');
+    const currentTime = now.toFormat('HH:mm:ss');
 
     let whereCondition = {};
 
