@@ -177,6 +177,17 @@ const getAllTickets = async(req,res,next)=>{
 			};
 		});
 
+		decryptedTickets.sort((a, b) => {
+      const dateA = new Date(a.date);
+      const dateB = new Date(b.date);
+      if (dateA < dateB) return -1;
+      if (dateA > dateB) return 1;
+
+      const departureTimeA = new Date(a.flight.departure_time).getTime();
+      const departureTimeB = new Date(b.flight.departure_time).getTime();
+      return departureTimeA - departureTimeB;
+    });
+
 		res.status(200).json({
 			status: "Success",
 			message: "Successfully fetch all tickets!",
