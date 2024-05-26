@@ -125,131 +125,114 @@ const updateFlight = async(req,res,next)=>{
 	}
 }
 
-const getFlightsWithFilter = async(req,res,next)=>{
-	try {
-		const {origin, destination, date} = req.body;
-		let whereCondition = {};
-		if (origin && destination) {
-			whereCondition = {
-				[Op.and]: [
-					[
-						{
-							[Op.or]: [
-								{
-										'$origin_airport.name$': { [Op.like]: `%${origin}%` }
-								},
-								{
-										'$origin_airport.code$': { [Op.like]: `%${origin}%` }
-								},
-								{
-										'$origin_airport.city$': { [Op.like]: `%${origin}%` }
-								}
-							]
-						}
-					],
-					[
-						{
-							[Op.or]: [
-								{
-										'$destination_airport.name$': { [Op.like]: `%${destination}%` }
-								},
-								{
-										'$destination_airport.code$': { [Op.like]: `%${destination}%` }
-								},
-								{
-										'$destination_airport.city$': { [Op.like]: `%${destination}%` }
-								}
-							]
-						}
-					]
-				]
-			};
-		} else if (origin) {
-			whereCondition = {
-				[Op.or]: [
-					{
-						'$origin_airport.name$': { [Op.like]: `%${origin}%` }
-					},
-					{
-						'$origin_airport.code$': { [Op.like]: `%${origin}%` }
-					},
-					{
-						'$origin_airport.city$': { [Op.like]: `%${origin}%` }
-					}
-				]
-			};
-		} else if (destination) {
-			whereCondition = {
-				[Op.or]: [
-					{
-						'$destination_airport.name$': { [Op.like]: `%${destination}%` }
-					},
-					{
-						'$destination_airport.code$': { [Op.like]: `%${destination}%` }
-					},
-					{
-						'$destination_airport.city$': { [Op.like]: `%${destination}%` }
-					}
-				]
-			};
-		}
+const getFlightsWithFilter = async (req, res, next) => {
+  try {
+    const { origin, destination, date } = req.body;
+    const now = new Date();
+    const currentTime = now.toTimeString().split(' ')[0];
 
-		const filteredFlights = await Flight.findAll({
-			attributes: [
-					'id', 
-					'airline', 
-					'flightNumber', 
-					'departure_time', 
-					'arrival_time'		
-			],
-			include: [
-					{
-							model: Airport,
-							as: 'origin_airport',
-							attributes: ['name', 'code', 'city', 'province', 'timezone'],
-							where: whereCondition.origin_airport || {}
-					},
-					{
-							model: Airport,
-							as: 'destination_airport',
-							attributes: ['name', 'code', 'city', 'province', 'timezone'],
-							where: whereCondition.destination_airport || {}
-					},
-					{
-							model: Seat,
-							attributes: ['id', 'type', 'capacity', 'price',
-								[
-									Sequelize.literal(`(
-											SELECT COUNT(*)
-											FROM tickets AS ticket
-											WHERE
-													ticket.seatId = seats.id
-													AND DATE(ticket.date) = '${date}'
-									)`),
-									'ticketCount'
-								]
-							],
-							required: true,
-					}
-			],
-			where: whereCondition
-	});
-		if(!filteredFlights){
-			const error = new Error(`Flight doesn't exist!`);
-			error.statusCode = 400;
-			throw error;
-		}
-		res.status(200).json({
-			status: "Success",
-			message: "Successfully fetch flight data",
-			flights: filteredFlights
-		})
-	} catch (error) {
-		res.status(error.statusCode || 500).json({
-			status: "Error",
-			message: error.message
-		})
-	}
+    let whereCondition = {};
+
+    if (origin && destination) {
+      whereCondition = {
+        [Op.and]: [
+          {
+            [Op.or]: [
+              { '$origin_airport.name$': { [Op.like]: `%${origin}%` } },
+              { '$origin_airport.code$': { [Op.like]: `%${origin}%` } },
+              { '$origin_airport.city$': { [Op.like]: `%${origin}%` } }
+            ]
+          },
+          {
+            [Op.or]: [
+              { '$destination_airport.name$': { [Op.like]: `%${destination}%` } },
+              { '$destination_airport.code$': { [Op.like]: `%${destination}%` } },
+              { '$destination_airport.city$': { [Op.like]: `%${destination}%` } }
+            ]
+          }
+        ]
+      };
+    } else if (origin) {
+      whereCondition = {
+        [Op.or]: [
+          { '$origin_airport.name$': { [Op.like]: `%${origin}%` } },
+          { '$origin_airport.code$': { [Op.like]: `%${origin}%` } },
+          { '$origin_airport.city$': { [Op.like]: `%${origin}%` } }
+        ]
+      };
+    } else if (destination) {
+      whereCondition = {
+        [Op.or]: [
+          { '$destination_airport.name$': { [Op.like]: `%${destination}%` } },
+          { '$destination_airport.code$': { [Op.like]: `%${destination}%` } },
+          { '$destination_airport.city$': { [Op.like]: `%${destination}%` } }
+        ]
+      };
+    }
+
+    const filteredFlights = await Flight.findAll({
+      attributes: [
+        'id',
+        'airline',
+        'flightNumber',
+        'departure_time',
+        'arrival_time'
+      ],
+      include: [
+        {
+          model: Airport,
+          as: 'origin_airport',
+          attributes: ['name', 'code', 'city', 'province', 'timezone'],
+          where: whereCondition.origin_airport || {}
+        },
+        {
+          model: Airport,
+          as: 'destination_airport',
+          attributes: ['name', 'code', 'city', 'province', 'timezone'],
+          where: whereCondition.destination_airport || {}
+        },
+        {
+          model: Seat,
+          attributes: [
+            'id', 'type', 'capacity', 'price',
+            [
+              Sequelize.literal(`(
+                SELECT COUNT(*)
+                FROM tickets AS ticket
+                WHERE
+                  ticket.seatId = seats.id
+                  AND DATE(ticket.date) = '${date}'
+              )`),
+              'ticketCount'
+            ]
+          ],
+          required: true,
+        }
+      ],
+      where: {
+        ...whereCondition,
+        departure_time: { [Op.gt]: currentTime }
+      },
+      order: [['departure_time', 'ASC']]
+    });
+
+    if (!filteredFlights.length) {
+      const error = new Error(`No flights found!`);
+      error.statusCode = 400;
+      throw error;
+    }
+
+    res.status(200).json({
+      status: "Success",
+      message: "Successfully fetched flight data",
+      flights: filteredFlights
+    });
+  } catch (error) {
+    res.status(error.statusCode || 500).json({
+      status: "Error",
+      message: error.message
+    });
+  }
 }
 
 const getSpecificFlight = async(req,res,next)=>{
