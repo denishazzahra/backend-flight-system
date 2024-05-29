@@ -26,7 +26,7 @@ const getAllFlights = async(req,res,next)=>{
 				{
 					model: Seat,
 					attributes: ['id','type','capacity','price'],
-					required: true,
+					required: false,
 				}
 			]
 		});
@@ -256,7 +256,7 @@ const getSpecificFlight = async(req,res,next)=>{
 				{
 					model: Seat,
 					attributes: ['id','type','capacity','price'],
-					required: true,
+					required: false,
 				}
 			],
 			where: {
