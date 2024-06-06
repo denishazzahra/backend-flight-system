@@ -1,6 +1,22 @@
 steps:
 - name: 'gcr.io/cloud-builders/npm'
   args: ['install']
+- name: 'node:10.15.1'
+  entrypoint: 'npm'
+  args: ['run','create-env']
+  env:
+  - 'DB_USERNAME = ${_DB_USERNAME}'
+  - 'DB_PASSWORD = ${_DB_PASSWORD}'
+  - 'DB_NAME = ${_DB_NAME}'
+  - 'DB_HOST = ${_DB_HOST}'
+  - 'PORT = ${_PORT}'
+  - 'TOKEN_SECRET_KEY = ${_TOKEN_SECRET_KEY}'
+  - 'CLOUDINARY_API_SECRET = ${_CLOUDINARY_API_SECRET}'
+  - 'CLOUDINARY_API_KEY = ${_CLOUDINARY_API_KEY}'
+  - 'CLOUDINARY_CLOUD_NAME = ${_CLOUDINARY_CLOUD_NAME}'
+  - 'ENCRYPTION_ALGORITHM = ${_ENCRYPTION_ALGORITHM}'
+  - 'ENCRYPTION_KEY = ${_ENCRYPTION_KEY}'
+  - 'ENCRYPTION_IV = ${_ENCRYPTION_IV}'
 - name: 'gcr.io/google.com/cloudsdktool/cloud-sdk'
   entrypoint: 'bash'
   args: ['-c', 'gcloud config set app/cloud_build_timeout 1600 && gcloud app deploy']
