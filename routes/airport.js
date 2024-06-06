@@ -96,7 +96,7 @@ router.put("/airports/:id", updateAirport)
  *             code: string
  *             timezone: WIB
  *     responses:
- *       200:
+ *       201:
  *         description: Successful response with a list of airports.
  */
 
