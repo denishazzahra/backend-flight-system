@@ -1,2 +1,5 @@
 runtime: nodejs18
 service: backend-flight-system
+handlers:
+- url: /.*
+  script: auto
